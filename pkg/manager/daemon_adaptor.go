@@ -36,6 +36,7 @@ const endpointGetBackend string = "/api/v1/daemons/%s/backend"
 //     ensure the daemon has reached specified state.
 //   - `d` may have not been inserted into daemonStates and store yet.
 func (m *Manager) StartDaemon(d *daemon.Daemon) error {
+	//[maxing COMMENT]: 构造启动命令
 	cmd, err := m.BuildDaemonCommand(d, "", false)
 	if err != nil {
 		return errors.Wrapf(err, "create command for daemon %s", d.ID())
@@ -113,6 +114,7 @@ func (m *Manager) StartDaemon(d *daemon.Daemon) error {
 		collector.NewDaemonInfoCollector(&d.Version, 1).Collect()
 		d.Unlock()
 
+		//[maxing COMMENT]: 启动完之后就给supervisor发送状态。
 		d.SendStates()
 	}()
 

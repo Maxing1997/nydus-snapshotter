@@ -241,6 +241,7 @@ func (m *Manager) ListDaemons() []*daemon.Daemon {
 
 // FIXME: should handle the inconsistent status caused by any step
 // in the function that returns an error.
+// [maxing COMMENT]: 销毁daemon
 func (m *Manager) DestroyDaemon(d *daemon.Daemon) error {
 	log.L.Infof("Destroy nydusd daemon %s. Host mountpoint %s", d.ID(), d.HostMountpoint())
 
@@ -282,6 +283,7 @@ func (m *Manager) DestroyDaemon(d *daemon.Daemon) error {
 	return nil
 }
 
+// [maxing COMMENT]: 这里移除daemon产生的目录
 func (m *Manager) cleanUpDaemonResources(d *daemon.Daemon) {
 	// TODO: use recycle bin to stage directories/files to be deleted.
 	resource := []string{d.States.ConfigDir, d.States.LogDir}
