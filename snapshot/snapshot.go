@@ -296,12 +296,14 @@ func NewSnapshotter(ctx context.Context, cfg *config.SnapshotterConfig) (snapsho
 	}, nil
 }
 
+// [maxing COMMENT]: Cleanup函数，清理snapshotter目录。主要入口
 func (o *snapshotter) Cleanup(ctx context.Context) error {
 	log.L.Debugf("[Cleanup] snapshots")
 	if timer := collector.NewSnapshotMetricsTimer(collector.SnapshotMethodCleanup); timer != nil {
 		defer timer.ObserveDuration()
 	}
 
+	//[maxing comment]: 这里调用cleanupDirectories函数，获取需要移除的目录。
 	cleanup, err := o.cleanupDirectories(ctx)
 	if err != nil {
 		return err
@@ -310,6 +312,7 @@ func (o *snapshotter) Cleanup(ctx context.Context) error {
 	log.L.Infof("[Cleanup] orphan directories %v", cleanup)
 
 	for _, dir := range cleanup {
+		//[maxing comment]: 这里也会调用cleanupSnapshotDirectory函数，移除目录。
 		if err := o.cleanupSnapshotDirectory(ctx, dir); err != nil {
 			log.L.WithError(err).Warnf("failed to remove directory %s", dir)
 		}
@@ -360,6 +363,7 @@ func (o *snapshotter) Usage(ctx context.Context, key string) (snapshots.Usage, e
 }
 
 func (o *snapshotter) Mounts(ctx context.Context, key string) ([]mount.Mount, error) {
+	//[maxing COMMENT]: 常见打印
 	log.L.Debugf("[Mounts] snapshot %s", key)
 	if timer := collector.NewSnapshotMetricsTimer(collector.SnapshotMethodMount); timer != nil {
 		defer timer.ObserveDuration()
@@ -378,6 +382,7 @@ func (o *snapshotter) Mounts(ctx context.Context, key string) ([]mount.Mount, er
 	switch info.Kind {
 	case snapshots.KindView:
 		if label.IsNydusMetaLayer(info.Labels) {
+			//[maxing comment]: 等待对应snapshot的nydusd处于running状态。
 			err = o.fs.WaitUntilReady(id)
 			if err != nil {
 				// Skip waiting if clients is unpacking nydus artifacts to `mounts`
@@ -458,6 +463,7 @@ func (o *snapshotter) Prepare(ctx context.Context, key, parent string, opts ...s
 		return nil, err
 	}
 
+	//[maxing COMMENT]: 常见打印。
 	logger.Debugf("[Prepare] snapshot with labels %v", info.Labels)
 
 	processor, target, err := chooseProcessor(ctx, logger, o, s, key, parent, info.Labels, func() string { return o.upperPath(s.ID) })
@@ -718,6 +724,7 @@ func (o *snapshotter) findReferrerLayer(ctx context.Context, key string) (string
 	})
 }
 
+// [maxing COMMENT]: 这里findNydusMetaLayer是为了找到镜像层的snapshot，这样才有nydusd和它对应。
 func (o *snapshotter) findMetaLayer(ctx context.Context, key string) (string, snapshots.Info, error) {
 	return snapshot.IterateParentSnapshots(ctx, o.ms, key, func(_ string, i snapshots.Info) bool {
 		return label.IsNydusMetaLayer(i.Labels)
